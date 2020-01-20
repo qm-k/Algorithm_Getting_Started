@@ -1,0 +1,2 @@
+# Machine_Learning
+多线程的openpose在RK3399上的实现，同样可以部署到1808上
