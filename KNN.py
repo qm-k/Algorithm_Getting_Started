@@ -1,6 +1,6 @@
 #coding:utf-8
 
-import  numpy as np
+import numpy as np
 import operator   #内置的算数比较包
 import xlrd    #用于操作表格
 
@@ -37,7 +37,7 @@ def classify(input,dataSet,label,k):
     return classes
 
 if __name__ == '__main__':
-    DataSet = xlrd.open_workbook(r'./KNN.xls')
+    DataSet = xlrd.open_workbook(r'./DataSet/KNN.xls')
     sheet = DataSet.sheet_by_index(0)
     print("数据共：",sheet.ncols," 列",sheet.nrows," 行")
     group = np.array([[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],dtype=np.float)
@@ -48,10 +48,11 @@ if __name__ == '__main__':
         labels[i] = sheet.cell_value(i,2)
         print("第 ",i," 行的数据为",group[i],"类别为",labels[i])
     inputdata = eval(input("please input your data ( separated by commas):"))
-    indata = np.array(inputdata)
+    K = eval(input("input K value ：")) #eval 将输入时自动添加的""去掉
+    DataSet = np.array(inputdata)
     #print(type(inputdata))
     #print(labels)
     #print(type(indata),np.shape(indata),indata)
-    output = classify(indata,group,labels,3)
+    output = classify(DataSet,group,labels,K)
     print("resout of the class is : ",output)
         
