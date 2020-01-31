@@ -2,21 +2,27 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <ctime>
 
 using namespace std;
 using namespace cv;
 
 int main(int argc, char** argv)
 {
+	clock_t time_start, time_end;
+	double dura_time = 0;
 	if (argc != 3)
 	{
 		cout << "usage: feature_extraction img1 img2" << endl;
 		return 1;
 	}
 	//-- 读取图像
+	time_start = clock();
 	Mat img_1 = imread(argv[1]);//, CV_LOAD_IMAGE_COLOR
 	Mat img_2 = imread(argv[2]);//, CV_LOAD_IMAGE_COLOR
-
+	time_end = clock();
+	dura_time += (double)(time_end - time_start);
+	cout << "read img cost time:"<< dura_time / CLOCKS_PER_SEC << endl;
 	//- 初始化detector检测器descriptor描述子matcher匹配器，并声明怕匹配使用汉明距离
 	std::vector<KeyPoint> keypoints_1, keypoints_2;
 	Mat descriptors_1, descriptors_2;
@@ -25,12 +31,20 @@ int main(int argc, char** argv)
 	Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce-Hamming");
 
 	//-- 第一步:检测 Oriented FAST 特征点位置
+	time_start = clock();
 	detector->detect(img_1, keypoints_1);
 	detector->detect(img_2, keypoints_2);
+	time_end = clock();
+	dura_time += (double)(time_end - time_start);
+	cout << "fast detect cost time:" << (double)(time_end - time_start) / CLOCKS_PER_SEC << endl;
 
 	//-- 第二步:计算特征点 BRIEF 描述子
+	time_start = clock();
 	descriptor->compute(img_1, keypoints_1, descriptors_1);
 	descriptor->compute(img_2, keypoints_2, descriptors_2);
+	time_end = clock();
+	dura_time += (double)(time_end - time_start);
+	cout << "descriptor compute cost time:" << (double)(time_end - time_start) / CLOCKS_PER_SEC << endl;
 
 	Mat outimg1;
 	drawKeypoints(img_1, keypoints_1, outimg1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
@@ -39,18 +53,26 @@ int main(int argc, char** argv)
 	//-- 第三步:对两幅图像中的BRIEF描述子进行匹配，使用 Hamming 距离
 	//-- 并创建DMatch对象存储匹配的结果
 	vector<DMatch> matches;
+	time_start = clock();
 	matcher->match(descriptors_1, descriptors_2, matches);
+	time_end = clock();
+	dura_time += (double)(time_end - time_start);
+	cout << "match cost time:" << (double)(time_end - time_start) / CLOCKS_PER_SEC << endl;
 
 	//-- 第四步:匹配点对筛选，设置匹配度的上下限的初始值，通过遍历描述子的距离更新为实际的上下限最值
 	double min_dist = 10000, max_dist = 0;
 
 	//找出所有匹配之间的最小距离和最大距离, 即是最相似的和最不相似的两组点之间的距离
+	time_start = clock();
 	for (int i = 0; i < descriptors_1.rows; i++)
 	{
 		double dist = matches[i].distance;
 		if (dist < min_dist) min_dist = dist;
 		if (dist > max_dist) max_dist = dist;
 	}
+	time_end = clock();
+	dura_time += (double)(time_end - time_start);
+	cout << "all time used :" << dura_time / CLOCKS_PER_SEC << endl;
 
 	// 使用max_element和min_element STL找出第一个最大（最小）值，与上边循环功能相同
 	min_dist = min_element(matches.begin(), matches.end(), [](const DMatch& m1, const DMatch& m2) {return m1.distance < m2.distance; })->distance;
@@ -81,38 +103,3 @@ int main(int argc, char** argv)
 
 	return 0;
 }
-
-//#include<iostream>
-//
-//using namespace std;
-//unsigned int ret[2] = { 0,0 };
-//unsigned int func(unsigned int n, unsigned int m, unsigned int k)
-//{
-//
-//	while (true)
-//	{
-//		if ((n - ret[0]) * (m - ret[1]) <= k)
-//			return ret[0] + ret[1];
-//		if (ret[0] != (n - 1))
-//		{
-//			ret[0]++;
-//		}
-//		else
-//		{
-//			ret[1]++;
-//		}
-//	}
-//}
-//
-//int main()
-//{
-//	unsigned int n, m, k;
-//	//unsigned int a, b;
-//	unsigned int resout;
-//	cin >> n >> m >> k;
-//	cout << n << m << k << endl;
-//	resout = func(n, m, k);
-//	cout << resout << endl;
-//
-//	return 0;
-//}
